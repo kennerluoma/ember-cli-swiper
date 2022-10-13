@@ -9,7 +9,10 @@ export default Controller.extend({
 
   actions: {
     addToHistory(newElement) {
-      this.set('selectionHistory', `${jQ(newElement).text()}${this.selectionHistory}`);
+      this.set(
+        'selectionHistory',
+        `${jQ(newElement).text()}${this.selectionHistory}`
+      );
     },
 
     goToTwo() {
@@ -18,6 +21,6 @@ export default Controller.extend({
 
     onSwiperEnd() {
       later(() => alert('End of slider'), 300);
-    }
-  }
+    },
+  },
 });

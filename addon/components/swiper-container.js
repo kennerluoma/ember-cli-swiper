@@ -1,7 +1,7 @@
 /* globals Swiper */
 import Component from '@ember/component';
 import { getProperties } from '@ember/object';
-import { once } from '@ember/runloop';
+import { once, next } from '@ember/runloop';
 import { warn } from '@ember/debug';
 import { assign as emAssign } from '@ember/polyfills';
 import { or } from '@ember/object/computed';
@@ -17,7 +17,7 @@ const EMBER_CLI_SWIPER_OPTIONS = [
   'vertical',
   'centered',
   'updateFor',
-  'currentSlide'
+  'currentSlide',
 ];
 
 export default Component.extend({
@@ -111,10 +111,10 @@ export default Component.extend({
 
     // Overwrite pagination element selector
     if (options.pagination) {
-      let customPaginationEl
-        = (typeof options.pagination === 'string' && options.pagination) // custom string selector
-        || (typeof options.pagination === 'object' && options.pagination.el) // custom `el` option selector
-        || '';
+      let customPaginationEl =
+        (typeof options.pagination === 'string' && options.pagination) || // custom string selector
+        (typeof options.pagination === 'object' && options.pagination.el) || // custom `el` option selector
+        '';
 
       // Note:
       //  Never resolve user provided pagination configuration,
@@ -124,9 +124,7 @@ export default Component.extend({
         { clickable: customPaginationEl ? true : false }, // custom paginations must be clickable
         typeof options.pagination === 'object' ? options.pagination : {},
         {
-          el:
-            customPaginationEl
-            || `#${this.elementId} > .swiper-pagination`
+          el: customPaginationEl || `#${this.elementId} > .swiper-pagination`,
         }
       );
     }
@@ -149,7 +147,7 @@ export default Component.extend({
       // and that navigation inherits from Object.prototype
       options.navigation = assign({}, options.navigation, {
         nextEl: `.${this.nextElClass}`,
-        prevEl: `.${this.prevElClass}`
+        prevEl: `.${this.prevElClass}`,
       });
     }
 
@@ -218,9 +216,11 @@ export default Component.extend({
       index = swiper.realIndex;
     }
 
-    this.set('_currentSlideInternal', index);
-    this.set('currentSlide', index);
-    this.onChange(swiper.slides[swiper.realIndex]);
+    next(this, function () {
+      this.set('_currentSlideInternal', index);
+      this.set('currentSlide', index);
+      this.onChange(swiper.slides[swiper.realIndex]);
+    });
   },
 
   didUpdateAttrs() {
@@ -263,12 +263,11 @@ export default Component.extend({
       this._getOptions()
     );
 
-    let transitionEvent = this.loop ? 'slideChangeTransitionEnd' : 'slideChange';
+    let transitionEvent = this.loop
+      ? 'slideChangeTransitionEnd'
+      : 'slideChange';
     let instance = this.set('_swiper', new Swiper(this.element, swiperOptions));
-    instance.on(
-      transitionEvent,
-      this._slideChanged.bind(this, instance)
-    );
+    instance.on(transitionEvent, this._slideChanged.bind(this, instance));
 
     // Subscribe configured actions as Swiper events
     keys(this.events || {}).forEach((evt) =>
@@ -297,5 +296,5 @@ export default Component.extend({
    * @public
    * @param {Swiper.Slide} swiperSlide
    */
-  onChange(/* swiperSlide */) {}
+  onChange(/* swiperSlide */) {},
 });
